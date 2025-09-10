@@ -7,7 +7,7 @@ contract AyurvedicTraceability {
     uint public productCounter;
 
     struct Herb {
-        uint id;
+        string herbId;       // unique string ID (HERB-XXXX)
         string name;
         string geoLocation;
         uint timestamp;
@@ -16,7 +16,7 @@ contract AyurvedicTraceability {
 
     struct Batch {
         uint id;
-        uint[] herbIds;
+        string[] herbIds;     // store string herbIds
         string processDetails;
         uint timestamp;
         address processor;
@@ -30,24 +30,26 @@ contract AyurvedicTraceability {
         address packager;
     }
 
-    mapping(uint => Herb) public herbs;
+    // Herb lookup by herbId string
+    mapping(string => Herb) public herbs;
     mapping(uint => Batch) public batches;
     mapping(uint => Product) public products;
 
-    event HerbCollected(uint id, string name, string geoLocation, address collector);
-    event BatchCreated(uint id, uint[] herbIds, string processDetails);
+    event HerbCollected(string herbId, string name, string geoLocation, address collector);
+    event BatchCreated(uint id, string[] herbIds, string processDetails);
     event ProductLabeled(uint id, uint batchId, string formulationDetails);
 
     // -----------------
     //  Write Functions
     // -----------------
-    function collectHerb(string memory _name, string memory _geoLocation) public {
+    function collectHerb(string memory _herbId, string memory _name, string memory _geoLocation) public {
+        require(bytes(herbs[_herbId].herbId).length == 0, "Herb ID already exists");
         herbCounter++;
-        herbs[herbCounter] = Herb(herbCounter, _name, _geoLocation, block.timestamp, msg.sender);
-        emit HerbCollected(herbCounter, _name, _geoLocation, msg.sender);
+        herbs[_herbId] = Herb(_herbId, _name, _geoLocation, block.timestamp, msg.sender);
+        emit HerbCollected(_herbId, _name, _geoLocation, msg.sender);
     }
 
-    function createBatch(uint[] memory _herbIds, string memory _processDetails) public {
+    function createBatch(string[] memory _herbIds, string memory _processDetails) public {
         batchCounter++;
         batches[batchCounter] = Batch(batchCounter, _herbIds, _processDetails, block.timestamp, msg.sender);
         emit BatchCreated(batchCounter, _herbIds, _processDetails);
@@ -63,19 +65,18 @@ contract AyurvedicTraceability {
     // -----------------
     //  Read Functions
     // -----------------
-   function getHerb(uint _id) public view returns (Herb memory) {
-    require(_id > 0 && _id <= herbCounter, "Herb does not exist");
-    return herbs[_id];
-}
+    function getHerb(string memory _herbId) public view returns (Herb memory) {
+        require(bytes(herbs[_herbId].herbId).length > 0, "Herb does not exist");
+        return herbs[_herbId];
+    }
 
-function getBatch(uint _id) public view returns (Batch memory) {
-    require(_id > 0 && _id <= batchCounter, "Batch does not exist");
-    return batches[_id];
-}
+    function getBatch(uint _id) public view returns (Batch memory) {
+        require(_id > 0 && _id <= batchCounter, "Batch does not exist");
+        return batches[_id];
+    }
 
-function getProduct(uint _id) public view returns (Product memory) {
-    require(_id > 0 && _id <= productCounter, "Product does not exist");
-    return products[_id];
-}
-
+    function getProduct(uint _id) public view returns (Product memory) {
+        require(_id > 0 && _id <= productCounter, "Product does not exist");
+        return products[_id];
+    }
 }
