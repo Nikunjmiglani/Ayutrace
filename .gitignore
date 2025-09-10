@@ -1,0 +1,12 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Hardhat artifacts/cache
+contracts/artifacts/
+contracts/cache/
+
+# Env files
+.env
+.env.local
